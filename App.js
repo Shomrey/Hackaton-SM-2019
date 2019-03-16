@@ -36,7 +36,7 @@ export default class MagnetometerSensor extends React.Component {
       Accelerometer.addListener(result => {
         let flatness = result.z / Math.sqrt(result.x * result.x + result.y * result.y + result.z * result.z);
         this._scaleY.setValue(flatness);
-        this.setState({isFlat: flatness > 0.999})
+        this.setState({isFlat: flatness > 0.9999})
       })
     ];
   };
