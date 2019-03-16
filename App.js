@@ -1,6 +1,6 @@
 import React from 'react';
-import { Magnetometer, Accelerometer, Gyroscope } from 'expo';
-import { StyleSheet, Text, TouchableOpacity, View, Animated } from 'react-native';
+import { Magnetometer, Accelerometer, } from 'expo';
+import { StyleSheet, Text, TouchableOpacity, View, Animated, } from 'react-native';
 import Svg,{Polyline,} from 'react-native-svg';
 
 export default class MagnetometerSensor extends React.Component {
@@ -21,8 +21,8 @@ export default class MagnetometerSensor extends React.Component {
   }
   
   componentDidMount() {
-    Magnetometer.setUpdateInterval(50);
-    Accelerometer.setUpdateInterval(50);
+    Magnetometer.setUpdateInterval(500);
+    Accelerometer.setUpdateInterval(500);
     this._subscribe();
   }
 
@@ -32,10 +32,24 @@ export default class MagnetometerSensor extends React.Component {
 
   _subscribe = () => {
     this._subscriptions = [
-      Magnetometer.addListener(result => this._rotateValue.setValue(angle(result))),
+      Magnetometer.addListener(result => {
+        const ang = angle(result);
+        Animated.spring(this._rotateValue,
+        {
+          toValue: ang,
+          useNativeDriver:true
+        }).start()
+        //this._rotateValue.setValue(
+        
+        //angle(result)
+        }),
       Accelerometer.addListener(result => {
         let flatness = result.z / Math.sqrt(result.x * result.x + result.y * result.y + result.z * result.z);
-        this._scaleY.setValue(flatness);
+        Animated.spring(this._scaleY,
+          {
+            toValue: flatness,
+            useNativeDriver:true
+          }).start()
         this.setState({isFlat: flatness > 0.9999})
       })
     ];
@@ -51,7 +65,7 @@ export default class MagnetometerSensor extends React.Component {
     let logoColor = this.state.isFlat ? "#fff" : "#000";
     return (
       <Animated.View style = {{backgroundColor: bgColor}}>
-        <Animated.View style = {{transform: [{rotateZ: this._rotate}, {scaleY: this._scaleY}]}}>
+        <Animated.View style = {{transform: [{rotate: this._rotate}, {scaleY: this._scaleY}]}}>
           <Svg height="100%" width="100%" viewBox="0 0 1000 1000" rotation={180}>
             <Polyline fill={logoColor} points="500 0, 933 250, 933 750, 824.75 812.5, 824.75 437.5, 500 625, 175.25 437.5, 175.25 500, 500 687.5, 770.625  531.25, 770.625 843.75, 500 1000, 67 750, 67 625, 500 875, 662.375 781.25, 662.375 718.75, 500 812.5, 67 562.5, 67 250"/>
           </Svg>
