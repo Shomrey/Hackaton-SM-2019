@@ -23,7 +23,7 @@ export default class MagnetometerSensor extends React.Component {
       //extrapolate: 'clamp'
     //});
 
-    this._rotateX = this._rotateValue.interpolate({
+    this._rotate = this._rotateValue.interpolate({
       inputRange: [0,360],
       outputRange: ['0deg', '360deg'],
       extrapolate: 'clamp'
@@ -38,32 +38,15 @@ export default class MagnetometerSensor extends React.Component {
 
   
   componentDidMount() {
+    Magnetometer.setUpdateInterval(50);
+    Gyroscope.setUpdateInterval(50);
+    Accelerometer.setUpdateInterval(50);
     this._subscribe();
   }
 
   componentWillUnmount() {
     this._unsubscribe();
   }
-
-  _toggle = () => {
-    if (this._subscriptions) {
-      this._unsubscribe();
-    } else {
-      this._subscribe();
-    }
-  };
-
-  _slow = () => {
-    Magnetometer.setUpdateInterval(1000);
-    Gyroscope.setUpdateInterval(1000);
-    Accelerometer.setUpdateInterval(1000);
-  };
-
-  _fast = () => {
-    Magnetometer.setUpdateInterval(1000);
-    Gyroscope.setUpdateInterval(1000);
-    Accelerometer.setUpdateInterval(1000);
-  };
 
   _subscribe = () => {
     this._subscriptions = [
@@ -88,7 +71,6 @@ export default class MagnetometerSensor extends React.Component {
     let a = this.state.accelerometerData; 
     let g = this.state.gyroscopeData;
 
-
     return (
       <View style={styles.sensor}>
         <Text>Magnetometer:</Text>
@@ -109,29 +91,11 @@ export default class MagnetometerSensor extends React.Component {
           { round(angle(m)) }
         </Text>
 
-        <View style = {styles.container}>
-            <View style = {[styles.bar, {width: this.state.barWidth, height: this.state.barHeight}]}>
-               <Animated.View style = {[styles.flex, {width: this.state.flexWidth, height: this.state.barHeight, transform: [{rotateX: this._rotateX}/*, {scaleX: this._scaleX}*/]}]}/>
-            </View> 
-        </View>
-
-        <Animated.View style = {[{transform: [{rotateZ: this._rotateX}/*, {scaleX: this._scaleX}*/]}]}>
+        <Animated.View style = {[{transform: [{rotateZ: this._rotate}/*, {scaleX: this._scaleX}*/]}]}>
           <Svg height="100%" width="100%" viewBox="0 0 1000 1000">
             <Polyline fill="black" points="500 0, 933 250, 933 750, 824.75 812.5, 824.75 437.5, 500 625, 175.25 437.5, 175.25 500, 500 687.5, 770.625  531.25, 770.625 843.75, 500 1000, 67 750, 67 625, 500 875, 662.375 781.25, 662.375 718.75, 500 812.5, 67 562.5, 67 250"/>
           </Svg>
         </Animated.View>
-
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity onPress={this._toggle} style={styles.button}>
-            <Text>Toggle</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={this._slow} style={[styles.button, styles.middleButton]}>
-            <Text>Slow</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={this._fast} style={styles.button}>
-            <Text>Fast</Text>
-          </TouchableOpacity>
-        </View>
       </View>
     );
   }
