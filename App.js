@@ -15,7 +15,8 @@ export default class MagnetometerSensor extends React.Component {
 
   constructor(props) {
     super(props);
-    this._scaleValue = new Animated.Value(0);
+    this._scaleX = new Animated.Value(0);
+    this._scaleY = new Animated.Value(0);
     this._rotateValue = new Animated.Value(0);
     //this._translateX = this._animatedValue.interpolate({
       //inputRange: [-1, 1],
@@ -29,18 +30,14 @@ export default class MagnetometerSensor extends React.Component {
       extrapolate: 'clamp'
     });
 
-    /*this._scaleX = this._scaleValue.interpolate({
-      inputRange: [0,1],
-      outputTange: [0,1],
-      extrapolate: 'clamp'
-    })*/
+    
   }
 
   
   componentDidMount() {
     Magnetometer.setUpdateInterval(50);
     Gyroscope.setUpdateInterval(50);
-    Accelerometer.setUpdateInterval(50);
+    Accelerometer.setUpdateInterval(300);
     this._subscribe();
   }
 
@@ -55,7 +52,9 @@ export default class MagnetometerSensor extends React.Component {
         this._rotateValue.setValue(angle(result));
       }),
       Accelerometer.addListener(
-        result => {this.setState({ accelerometerData: result });
+        result => {
+          this.setState({ accelerometerData: result });
+          this._scaleY.setValue(result.z / Math.sqrt(result.x * result.x + result.y * result.y + result.z * result.z ));
       }),
       Gyroscope.addListener(result => this.setState({ gyroscopeData: result }))
     ];
@@ -91,7 +90,7 @@ export default class MagnetometerSensor extends React.Component {
           { round(angle(m)) }
         </Text>
 
-        <Animated.View style = {[{transform: [{rotateZ: this._rotate}/*, {scaleX: this._scaleX}*/]}]}>
+        <Animated.View style = {[{transform: [{rotateZ: this._rotate}, /*{scaleX: this._scaleX}*/ {scaleY: this._scaleY}]}]}>
           <Svg height="100%" width="100%" viewBox="0 0 1000 1000">
             <Polyline fill="black" points="500 0, 933 250, 933 750, 824.75 812.5, 824.75 437.5, 500 625, 175.25 437.5, 175.25 500, 500 687.5, 770.625  531.25, 770.625 843.75, 500 1000, 67 750, 67 625, 500 875, 662.375 781.25, 662.375 718.75, 500 812.5, 67 562.5, 67 250"/>
           </Svg>
