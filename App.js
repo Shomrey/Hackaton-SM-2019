@@ -1,6 +1,6 @@
 import React from 'react';
 import { Magnetometer, Accelerometer, Gyroscope } from 'expo';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, Animated } from 'react-native';
 import Svg,{Polyline,} from 'react-native-svg';
 
 export default class MagnetometerSensor extends React.Component {
@@ -8,8 +8,24 @@ export default class MagnetometerSensor extends React.Component {
     magnetometerData: { x: 0, y: 0, z: 0 },
     accelerometerData: { x: 0, y: 0, z: 0 },
     gyroscopeData: { x: 0, y: 0, z: 0 },
+    barWidth: 300,
+    barHeight: 50, 
+    flexWidth: 30,
+    animatedValue: new Animated.Value(0),
   };
 
+  constructor(props) {
+    super(props);
+    this._animatedValue = new Animated.Value(0);
+
+    this._opacityAnimation = this._animatedValue.interpolate({
+      inputRange: [-1, 1],
+      outputRange: [15, 269],
+      extrapolate: 'clamp'
+    });
+  }
+
+  
   componentDidMount() {
     this._subscribe();
   }
@@ -41,13 +57,16 @@ export default class MagnetometerSensor extends React.Component {
   _subscribe = () => {
     this._subscriptions = [
       Magnetometer.addListener(result => this.setState({ magnetometerData: result })),
-      Accelerometer.addListener(result => this.setState({ accelerometerData: result })),
+      Accelerometer.addListener(result => {
+        this.setState({ accelerometerData: result });
+        this._animatedValue.setValue(result.z);
+      }),
       Gyroscope.addListener(result => this.setState({ gyroscopeData: result }))
     ];
   };
 
   _unsubscribe = () => {
-	this._subscriptions && this._subscriptions.forEach(sub => sub.remove());
+    this._subscriptions && this._subscriptions.forEach(sub => sub.remove());
     this._subscriptions = [];
   };
 
@@ -55,6 +74,7 @@ export default class MagnetometerSensor extends React.Component {
     let m = this.state.magnetometerData;
     let a = this.state.accelerometerData; 
     let g = this.state.gyroscopeData;
+
 
     return (
       <View style={styles.sensor}>
@@ -75,6 +95,12 @@ export default class MagnetometerSensor extends React.Component {
         <Text>
           { round(angle(m)) }
         </Text>
+
+        <View style = {styles.container}>
+            <View style = {[styles.bar, {width: this.state.barWidth, height: this.state.barHeight}]}>
+               <Animated.View style = {[styles.flex, {width: this.state.flexWidth, height: this.state.barHeight, transform: [{translateX: this._opacityAnimation}]}]}/>
+            </View> 
+        </View>
 
         <Svg height="100%" width="100%" viewBox="0 0 1000 1000" rotation={ -round(angle(m)) }>
           <Polyline fill="black" points="500 0, 933 250, 933 750, 824.75 812.5, 824.75 437.5, 500 625, 175.25 437.5, 175.25 500, 500 687.5, 770.625  531.25, 770.625 843.75, 500 1000, 67 750, 67 625, 500 875, 662.375 781.25, 662.375 718.75, 500 812.5, 67 562.5, 67 250"/>
@@ -117,11 +143,19 @@ function round(n) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    alignItems: 'center',
   },
   buttonContainer: {
     flexDirection: 'row',
     alignItems: 'stretch',
     marginTop: 15,
+  },
+  bar: {
+    backgroundColor: 'green',
+  },
+  flex: {
+    position: 'absolute',
+    backgroundColor: 'red',
   },
   button: {
     flex: 1,
