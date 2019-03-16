@@ -7,6 +7,9 @@ export default class MagnetometerSensor extends React.Component {
     MagnetometerData: {},
     AccelerometerData: {},
     GyroscopeData: {},
+    barWidth: 300,
+    barHeight: 50, 
+    flexWidth: 30,
   };
 
   componentDidMount() {
@@ -59,6 +62,7 @@ export default class MagnetometerSensor extends React.Component {
     let a = this.state.AccelerometerData; 
     let g = this.state.GyroscopeData;
 
+
     return (
       <View style={styles.sensor}>
         <Text>Magnetometer:</Text>
@@ -85,36 +89,11 @@ export default class MagnetometerSensor extends React.Component {
             <Text>Fast</Text>
           </TouchableOpacity>
         </View>
-      {/*</View>
-      <View style={styles.sensor}>*/}
-      
-
-      {/*View style={styles.buttonContainer}>
-        <TouchableOpacity onPress={this._toggle} style={styles.button}>
-          <Text>Toggle</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={this._slow} style={[styles.button, styles.middleButton]}>
-          <Text>Slow</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={this._fast} style={styles.button}>
-          <Text>Fast</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-    <View style={styles.sensor}>*/}
-    
-
-    {/*<View style={styles.buttonContainer}>
-      <TouchableOpacity onPress={this._toggle} style={styles.button}>
-        <Text>Toggle</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={this._slow} style={[styles.button, styles.middleButton]}>
-        <Text>Slow</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={this._fast} style={styles.button}>
-        <Text>Fast</Text>
-      </TouchableOpacity>
-    </View>*/}
+        <View style = {styles.container}>
+            <View style = {[styles.bar, {width: this.state.barWidth, height: this.state.barHeight}]}>
+                <View style = {[styles.flex, {width: this.state.flexWidth, height: this.state.barHeight}]}/>
+            </View> 
+        </View>
   </View>
     );
   }
@@ -131,11 +110,19 @@ function round(n) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    alignItems: 'center',
   },
   buttonContainer: {
     flexDirection: 'row',
     alignItems: 'stretch',
     marginTop: 15,
+  },
+  bar: {
+    backgroundColor: 'green',
+  },
+  flex: {
+    position: 'absolute',
+    backgroundColor: 'red',
   },
   button: {
     flex: 1,
