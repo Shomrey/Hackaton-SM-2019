@@ -11,18 +11,29 @@ export default class MagnetometerSensor extends React.Component {
     barWidth: 300,
     barHeight: 50, 
     flexWidth: 30,
-    animatedValue: new Animated.Value(0),
   };
 
   constructor(props) {
     super(props);
-    this._animatedValue = new Animated.Value(0);
+    this._scaleValue = new Animated.Value(0);
+    this._rotateValue = new Animated.Value(0);
+    //this._translateX = this._animatedValue.interpolate({
+      //inputRange: [-1, 1],
+      //outputRange: [15, 269],
+      //extrapolate: 'clamp'
+    //});
 
-    this._opacityAnimation = this._animatedValue.interpolate({
-      inputRange: [-1, 1],
-      outputRange: [15, 269],
+    this._rotateX = this._rotateValue.interpolate({
+      inputRange: [0,360],
+      outputRange: ['0deg', '360deg'],
       extrapolate: 'clamp'
     });
+
+    /*this._scaleX = this._scaleValue.interpolate({
+      inputRange: [0,1],
+      outputTange: [0,1],
+      extrapolate: 'clamp'
+    })*/
   }
 
   
@@ -56,10 +67,12 @@ export default class MagnetometerSensor extends React.Component {
 
   _subscribe = () => {
     this._subscriptions = [
-      Magnetometer.addListener(result => this.setState({ magnetometerData: result })),
-      Accelerometer.addListener(result => {
-        this.setState({ accelerometerData: result });
-        this._animatedValue.setValue(result.z);
+      Magnetometer.addListener(result => {
+        this.setState({ magnetometerData: result })
+        this._rotateValue.setValue(angle(result));
+      }),
+      Accelerometer.addListener(
+        result => {this.setState({ accelerometerData: result });
       }),
       Gyroscope.addListener(result => this.setState({ gyroscopeData: result }))
     ];
@@ -98,13 +111,15 @@ export default class MagnetometerSensor extends React.Component {
 
         <View style = {styles.container}>
             <View style = {[styles.bar, {width: this.state.barWidth, height: this.state.barHeight}]}>
-               <Animated.View style = {[styles.flex, {width: this.state.flexWidth, height: this.state.barHeight, transform: [{translateX: this._opacityAnimation}]}]}/>
+               <Animated.View style = {[styles.flex, {width: this.state.flexWidth, height: this.state.barHeight, transform: [{rotateX: this._rotateX}/*, {scaleX: this._scaleX}*/]}]}/>
             </View> 
         </View>
 
-        <Svg height="100%" width="100%" viewBox="0 0 1000 1000" rotation={ -round(angle(m)) }>
-          <Polyline fill="black" points="500 0, 933 250, 933 750, 824.75 812.5, 824.75 437.5, 500 625, 175.25 437.5, 175.25 500, 500 687.5, 770.625  531.25, 770.625 843.75, 500 1000, 67 750, 67 625, 500 875, 662.375 781.25, 662.375 718.75, 500 812.5, 67 562.5, 67 250"/>
-        </Svg>
+        <Animated.View style = {[{transform: [{rotateZ: this._rotateX}/*, {scaleX: this._scaleX}*/]}]}>
+          <Svg height="100%" width="100%" viewBox="0 0 1000 1000">
+            <Polyline fill="black" points="500 0, 933 250, 933 750, 824.75 812.5, 824.75 437.5, 500 625, 175.25 437.5, 175.25 500, 500 687.5, 770.625  531.25, 770.625 843.75, 500 1000, 67 750, 67 625, 500 875, 662.375 781.25, 662.375 718.75, 500 812.5, 67 562.5, 67 250"/>
+          </Svg>
+        </Animated.View>
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity onPress={this._toggle} style={styles.button}>
@@ -129,7 +144,7 @@ function angle(m) {
   else if (m.y == 0 && m.x <= 0) angle = 0;
   else if (m.y > 0) angle = -Math.atan(m.x/m.y) * 180 / 3.14159;
   else angle = 180 - Math.atan(m.x/m.y) * 180 / 3.14159;
-  return (angle > 0 ? angle : 360 + angle) + 5.61;
+  return 360 - ((angle > 0 ? angle : 360 + angle) + 5.61);
 }
 
 function round(n) {
