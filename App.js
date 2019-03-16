@@ -1,16 +1,17 @@
 import React from 'react';
 import { Magnetometer, Accelerometer, Gyroscope } from 'expo';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Svg,{Polyline,} from 'react-native-svg';
 
 export default class MagnetometerSensor extends React.Component {
   state = {
-    MagnetometerData: {},
-    AccelerometerData: {},
-    GyroscopeData: {},
+    magnetometerData: { x: 0, y: 0, z: 0 },
+    accelerometerData: { x: 0, y: 0, z: 0 },
+    gyroscopeData: { x: 0, y: 0, z: 0 },
   };
 
   componentDidMount() {
-    this._toggle();
+    this._subscribe();
   }
 
   componentWillUnmount() {
@@ -18,7 +19,7 @@ export default class MagnetometerSensor extends React.Component {
   }
 
   _toggle = () => {
-    if (this._subscription) {
+    if (this._subscriptions) {
       this._unsubscribe();
     } else {
       this._subscribe();
@@ -32,32 +33,28 @@ export default class MagnetometerSensor extends React.Component {
   };
 
   _fast = () => {
-    Magnetometer.setUpdateInterval(16);
-    Gyroscope.setUpdateInterval(16);
-    Accelerometer.setUpdateInterval(16);
+    Magnetometer.setUpdateInterval(1000);
+    Gyroscope.setUpdateInterval(1000);
+    Accelerometer.setUpdateInterval(1000);
   };
 
   _subscribe = () => {
-    this._subscription = Magnetometer.addListener(result => {
-      this.setState({ MagnetometerData: result });
-    });
-    this._subscription = Accelerometer.addListener(result => {
-      this.setState({ AccelerometerData: result });
-    });
-    this._subscription = Gyroscope.addListener(result => {
-      this.setState({ GyroscopeData: result });
-    });
+    this._subscriptions = [
+      Magnetometer.addListener(result => this.setState({ magnetometerData: result })),
+      Accelerometer.addListener(result => this.setState({ accelerometerData: result })),
+      Gyroscope.addListener(result => this.setState({ gyroscopeData: result }))
+    ];
   };
 
   _unsubscribe = () => {
-    this._subscription && this._subscription.remove();
-    this._subscription = null;
+	this._subscriptions && this._subscriptions.forEach(sub => sub.remove());
+    this._subscriptions = [];
   };
 
   render() {
-    let m = this.state.MagnetometerData;
-    let a = this.state.AccelerometerData; 
-    let g = this.state.GyroscopeData;
+    let m = this.state.magnetometerData;
+    let a = this.state.accelerometerData; 
+    let g = this.state.gyroscopeData;
 
     return (
       <View style={styles.sensor}>
@@ -66,13 +63,22 @@ export default class MagnetometerSensor extends React.Component {
           xM: {round(m.x)} yM: {round(m.y)} zM: {round(m.z)}
         </Text>
         <Text>Gyroscope:</Text>
-    <Text>
-      xG: {round(g.x)} yG: {round(g.y)} zG: {round(g.z)}
-    </Text>
-    <Text>Accelerometer:</Text>
-      <Text>
-        xA: {round(a.x)} yA: {round(a.y)} zA: {round(a.z)}
-      </Text>
+        <Text>
+          xG: {round(g.x)} yG: {round(g.y)} zG: {round(g.z)}
+        </Text>
+        <Text>Accelerometer:</Text>
+        <Text>
+          xA: {round(a.x)} yA: {round(a.y)} zA: {round(a.z)}
+        </Text>
+
+        <Text>Angle: </Text>
+        <Text>
+          { round(angle(m)) }
+        </Text>
+
+        <Svg height="100%" width="100%" viewBox="0 0 1000 1000" rotation={ -round(angle(m)) }>
+          <Polyline fill="black" points="500 0, 933 250, 933 750, 824.75 812.5, 824.75 437.5, 500 625, 175.25 437.5, 175.25 500, 500 687.5, 770.625  531.25, 770.625 843.75, 500 1000, 67 750, 67 625, 500 875, 662.375 781.25, 662.375 718.75, 500 812.5, 67 562.5, 67 250"/>
+        </Svg>
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity onPress={this._toggle} style={styles.button}>
@@ -85,39 +91,19 @@ export default class MagnetometerSensor extends React.Component {
             <Text>Fast</Text>
           </TouchableOpacity>
         </View>
-      {/*</View>
-      <View style={styles.sensor}>*/}
-      
-
-      {/*View style={styles.buttonContainer}>
-        <TouchableOpacity onPress={this._toggle} style={styles.button}>
-          <Text>Toggle</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={this._slow} style={[styles.button, styles.middleButton]}>
-          <Text>Slow</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={this._fast} style={styles.button}>
-          <Text>Fast</Text>
-        </TouchableOpacity>
       </View>
-    </View>
-    <View style={styles.sensor}>*/}
-    
-
-    {/*<View style={styles.buttonContainer}>
-      <TouchableOpacity onPress={this._toggle} style={styles.button}>
-        <Text>Toggle</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={this._slow} style={[styles.button, styles.middleButton]}>
-        <Text>Slow</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={this._fast} style={styles.button}>
-        <Text>Fast</Text>
-      </TouchableOpacity>
-    </View>*/}
-  </View>
     );
   }
+}
+
+
+function angle(m) {
+  let angle;
+  if (m.y == 0 && m.x > 0) angle = 180;
+  else if (m.y == 0 && m.x <= 0) angle = 0;
+  else if (m.y > 0) angle = -Math.atan(m.x/m.y) * 180 / 3.14159;
+  else angle = 180 - Math.atan(m.x/m.y) * 180 / 3.14159;
+  return (angle > 0 ? angle : 360 + angle) + 5.61;
 }
 
 function round(n) {
