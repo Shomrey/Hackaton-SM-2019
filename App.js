@@ -19,7 +19,7 @@ export default class MagnetometerSensor extends React.Component {
     super(props);
     this._animatedValue = new Animated.Value(0);
 
-    this._opacityAnimation = this._animatedValue.interpolate({
+    this._translateX = this._animatedValue.interpolate({
       inputRange: [-1, 1],
       outputRange: [15, 269],
       extrapolate: 'clamp'
@@ -107,7 +107,7 @@ export default class MagnetometerSensor extends React.Component {
         </View>
         <View style = {styles.container}>
             <View style = {[styles.bar, {width: this.state.barWidth, height: this.state.barHeight}]}>
-               <Animated.View style = {[styles.flex, {width: this.state.flexWidth, height: this.state.barHeight, transform: [{translateX: this._opacityAnimation}]}]}/>
+               <Animated.View style = {[styles.flex, {width: this.state.flexWidth, height: this.state.barHeight, transform: [{translateX: this._translateX}, {rotateX: '40deg'}]}]}/>
             </View> 
         </View>
   </View>
