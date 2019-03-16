@@ -1,6 +1,8 @@
 import React from 'react';
 import { Magnetometer, Accelerometer, Gyroscope } from 'expo';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, Animated } from 'react-native';
+
+
 
 export default class MagnetometerSensor extends React.Component {
   state = {
@@ -10,8 +12,21 @@ export default class MagnetometerSensor extends React.Component {
     barWidth: 300,
     barHeight: 50, 
     flexWidth: 30,
+    animatedValue: new Animated.Value(0),
   };
 
+  constructor(props) {
+    super(props);
+    this._animatedValue = new Animated.Value(0);
+
+    this._opacityAnimation = this._animatedValue.interpolate({
+      inputRange: [-1, 1],
+      outputRange: [15, 269],
+      extrapolate: 'clamp'
+    });
+  }
+
+  
   componentDidMount() {
     this._toggle();
   }
@@ -46,6 +61,7 @@ export default class MagnetometerSensor extends React.Component {
     });
     this._subscription = Accelerometer.addListener(result => {
       this.setState({ AccelerometerData: result });
+      this._animatedValue.setValue(result.z)
     });
     this._subscription = Gyroscope.addListener(result => {
       this.setState({ GyroscopeData: result });
@@ -91,7 +107,7 @@ export default class MagnetometerSensor extends React.Component {
         </View>
         <View style = {styles.container}>
             <View style = {[styles.bar, {width: this.state.barWidth, height: this.state.barHeight}]}>
-                <View style = {[styles.flex, {width: this.state.flexWidth, height: this.state.barHeight}]}/>
+               <Animated.View style = {[styles.flex, {width: this.state.flexWidth, height: this.state.barHeight, transform: [{translateX: this._opacityAnimation}]}]}/>
             </View> 
         </View>
   </View>
